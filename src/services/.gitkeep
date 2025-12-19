@@ -1,0 +1,2 @@
+# Services directory
+This directory contains service classes for business logic (LLM, Database, Validation).

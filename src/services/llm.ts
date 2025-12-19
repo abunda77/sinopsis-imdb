@@ -1,0 +1,186 @@
+import type { MovieInfo } from '../types/models';
+import type { LLMRequest, LLMResponse } from '../types/api';
+
+/**
+ * Custom error for LLM-related failures
+ */
+export class LLMError extends Error {
+  public readonly statusCode?: number;
+  
+  constructor(message: string, statusCode?: number) {
+    super(message);
+    this.name = 'LLMError';
+    this.statusCode = statusCode;
+  }
+}
+
+/**
+ * Custom error for authentication failures
+ */
+export class AuthenticationError extends LLMError {
+  constructor(message: string = 'Invalid API credentials. Please check your API key.') {
+    super(message, 401);
+    this.name = 'AuthenticationError';
+  }
+}
+
+/**
+ * Custom error for parsing failures
+ */
+export class ParsingError extends LLMError {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ParsingError';
+  }
+}
+
+/**
+ * LLMService handles communication with OpenAI-compatible LLM APIs
+ */
+export class LLMService {
+  private apiKey: string = '';
+  private modelName: string = '';
+  private apiBaseUrl: string = 'https://api.openai.com/v1';
+
+  /**
+   * Configure the LLM service with API credentials and settings
+   * @param apiKey - API key for authentication
+   * @param modelName - Model identifier to use for requests
+   * @param apiBaseUrl - Base URL for the API (optional)
+   */
+  configure(apiKey: string, modelName: string, apiBaseUrl?: string): void {
+    this.apiKey = apiKey;
+    this.modelName = modelName;
+    if (apiBaseUrl) {
+      this.apiBaseUrl = apiBaseUrl;
+    }
+  }
+
+  /**
+   * Search for movie information using the LLM
+   * @param title - Movie title to search for
+   * @returns Promise resolving to MovieInfo with synopsis and IMDb score
+   * @throws {LLMError} If the request fails or response is invalid
+   * @throws {AuthenticationError} If authentication fails
+   * @throws {ParsingError} If response parsing fails
+   */
+  async searchMovie(title: string): Promise<MovieInfo> {
+    if (!this.apiKey || !this.modelName) {
+      throw new LLMError('LLM service not configured. Call configure() first.');
+    }
+
+    // Create the structured prompt
+    const request: LLMRequest = {
+      model: this.modelName,
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a movie information assistant. When given a movie title, respond with a JSON object containing the movie\'s synopsis and IMDb score. Translate the synopsis to Indonesian language.'
+        },
+        {
+          role: 'user',
+          content: title
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 500
+    };
+
+    try {
+      // Send request to LLM API
+      const response = await fetch(`${this.apiBaseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`
+        },
+        body: JSON.stringify(request)
+      });
+
+      // Handle authentication errors
+      if (response.status === 401) {
+        throw new AuthenticationError();
+      }
+
+      // Handle other HTTP errors
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => 'Unknown error');
+        throw new LLMError(
+          `LLM API request failed with status ${response.status}: ${errorText}`,
+          response.status
+        );
+      }
+
+      // Parse response
+      const data: LLMResponse = await response.json();
+
+      // Validate response structure
+      if (!data.choices || data.choices.length === 0 || !data.choices[0].message) {
+        throw new ParsingError('Invalid response structure from LLM API');
+      }
+
+      const content = data.choices[0].message.content;
+
+      // Parse the movie information from the response
+      return this.parseMovieInfo(content);
+
+    } catch (error) {
+      // Re-throw our custom errors
+      if (error instanceof LLMError) {
+        throw error;
+      }
+
+      // Handle network errors
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new LLMError('Network error: Unable to reach LLM API. Please check your connection.');
+      }
+
+      // Handle other unexpected errors
+      throw new LLMError(`Unexpected error during LLM request: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Parse movie information from LLM response content
+   * @param content - Raw content from LLM response
+   * @returns MovieInfo object with synopsis and IMDb score
+   * @throws {ParsingError} If parsing fails
+   */
+  private parseMovieInfo(content: string): MovieInfo {
+    try {
+      // Try to extract JSON from the response
+      // The LLM might wrap the JSON in markdown code blocks or add extra text
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new ParsingError('No JSON object found in LLM response');
+      }
+
+      const parsed = JSON.parse(jsonMatch[0]);
+
+      // Validate required fields
+      if (typeof parsed.synopsis !== 'string' || !parsed.synopsis.trim()) {
+        throw new ParsingError('Missing or invalid synopsis in LLM response');
+      }
+
+      if (typeof parsed.imdbScore !== 'number' || parsed.imdbScore < 0 || parsed.imdbScore > 10) {
+        throw new ParsingError('Missing or invalid IMDb score in LLM response (must be 0-10)');
+      }
+
+      return {
+        synopsis: parsed.synopsis.trim(),
+        imdbScore: parsed.imdbScore
+      };
+
+    } catch (error) {
+      if (error instanceof ParsingError) {
+        throw error;
+      }
+
+      if (error instanceof SyntaxError) {
+        throw new ParsingError('Failed to parse JSON from LLM response');
+      }
+
+      throw new ParsingError(`Unexpected error parsing LLM response: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+}
