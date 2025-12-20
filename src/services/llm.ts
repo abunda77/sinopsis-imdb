@@ -45,12 +45,12 @@ export class LLMService {
    * Configure the LLM service with API credentials and settings
    * @param apiKey - API key for authentication
    * @param modelName - Model identifier to use for requests
-   * @param apiBaseUrl - Base URL for the API (optional, kept for backward compatibility but not used)
+   * @param _apiBaseUrl - Base URL for the API (optional, kept for backward compatibility but not used)
    */
-  configure(apiKey: string, modelName: string, apiBaseUrl?: string): void {
+  configure(apiKey: string, modelName: string, _apiBaseUrl?: string): void {
     this.apiKey = apiKey;
     this.modelName = modelName;
-    // apiBaseUrl parameter kept for backward compatibility but not used
+    // _apiBaseUrl parameter kept for backward compatibility but not used
     // All requests go through /api proxy in both dev and production
   }
 
