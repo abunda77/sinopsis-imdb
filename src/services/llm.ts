@@ -73,25 +73,29 @@ export class LLMService {
       messages: [
         {
           role: 'system',
-          content: `You are a movie information assistant. When given a movie title, you MUST respond with ONLY a valid JSON object in this exact format:
-{
-  "synopsis": "Movie synopsis in Indonesian language",
-  "imdbScore": 7.5
-}
+          content: `You are a movie information assistant. You MUST respond with ONLY a valid JSON object, nothing else.
 
-IMPORTANT RULES:
-- The imdbScore MUST be a number between 0 and 10 (e.g., 7.5, 8.2, 6.0)
-- Do NOT use strings for imdbScore (wrong: "7.5", correct: 7.5)
-- Translate the synopsis to Indonesian language
-- Do NOT include any text outside the JSON object
-- If you cannot find the exact IMDb score, provide your best estimate as a number`
+REQUIRED JSON FORMAT (copy this exactly):
+{"synopsis": "Movie synopsis in Indonesian language", "imdbScore": 7.5}
+
+CRITICAL RULES:
+1. Return ONLY the JSON object, no other text before or after
+2. The imdbScore MUST be a number (not a string), between 0 and 10
+3. Write the synopsis in Indonesian language
+4. Do NOT include markdown code blocks or any formatting
+5. Do NOT include explanations or additional text
+
+Example valid response:
+{"synopsis": "Film ini menceritakan tentang...", "imdbScore": 8.2}`
         },
         {
           role: 'user',
-          content: `Find information for the movie: ${title}`
+          content: `Return movie information for: ${title}
+
+Remember: Return ONLY the JSON object with synopsis (in Indonesian) and imdbScore (as number).`
         }
       ],
-      temperature: 0.3,
+      temperature: 0.2,
       max_tokens: 600
     };
 
@@ -171,20 +175,28 @@ IMPORTANT RULES:
    */
   private parseMovieInfo(content: string): MovieInfo {
     try {
+      console.log('Parsing movie info from content:', content.substring(0, 500));
+      
       // Remove markdown code blocks if present
       let cleanContent = content.trim();
       cleanContent = cleanContent.replace(/```json\s*/g, '').replace(/```\s*/g, '');
       
+      console.log('Clean content:', cleanContent.substring(0, 500));
+      
       // Try to extract JSON from the response
       const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
+        console.error('No JSON found in content');
         throw new ParsingError(`No JSON object found in LLM response. Response: ${content.substring(0, 200)}`);
       }
 
+      console.log('JSON match:', jsonMatch[0]);
       const parsed = JSON.parse(jsonMatch[0]);
+      console.log('Parsed object:', parsed);
 
       // Validate synopsis
       if (typeof parsed.synopsis !== 'string' || !parsed.synopsis.trim()) {
+        console.error('Invalid synopsis:', parsed.synopsis);
         throw new ParsingError('Missing or invalid synopsis in LLM response');
       }
 
@@ -197,6 +209,7 @@ IMPORTANT RULES:
         // Try to parse string to number
         imdbScore = parseFloat(parsed.imdbScore);
         if (isNaN(imdbScore)) {
+          console.error('Invalid imdbScore string:', parsed.imdbScore);
           throw new ParsingError(`IMDb score is not a valid number: ${parsed.imdbScore}`);
         }
       } else if (parsed.imdb_score !== undefined) {
@@ -210,20 +223,28 @@ IMPORTANT RULES:
           ? parsed.rating 
           : parseFloat(parsed.rating);
       } else {
+        console.error('No imdbScore field found. Parsed object:', parsed);
         throw new ParsingError('Missing IMDb score in LLM response. Expected field: imdbScore');
       }
 
+      console.log('Parsed imdbScore:', imdbScore);
+
       // Validate score range
       if (imdbScore < 0 || imdbScore > 10) {
+        console.error('imdbScore out of range:', imdbScore);
         throw new ParsingError(`IMDb score out of range (must be 0-10): ${imdbScore}`);
       }
 
-      return {
+      const result = {
         synopsis: parsed.synopsis.trim(),
         imdbScore: imdbScore
       };
+      
+      console.log('Final parsed result:', result);
+      return result;
 
     } catch (error) {
+      console.error('Error in parseMovieInfo:', error);
       if (error instanceof ParsingError) {
         throw error;
       }
