@@ -60,20 +60,11 @@ export function loadConfig(): AppConfig {
   // Try runtime config first (for production), then fall back to env vars (for development)
   const runtimeConfig = window.__APP_CONFIG__;
   
-  // Debug logging
-  console.log('Loading config...');
-  console.log('Runtime config available:', !!runtimeConfig);
-  console.log('Runtime API key:', runtimeConfig?.apiKey ? 'Present' : 'Missing');
-  console.log('Env API key:', import.meta.env.VITE_API_KEY ? 'Present' : 'Missing');
-  
   const config: Partial<AppConfig> = {
     apiKey: runtimeConfig?.apiKey || import.meta.env.VITE_API_KEY,
     modelName: runtimeConfig?.modelName || import.meta.env.VITE_MODEL_NAME,
     apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'https://api.openai.com/v1',
   };
-
-  console.log('Final config - API key:', config.apiKey ? 'Present' : 'Missing');
-  console.log('Final config - Model:', config.modelName);
 
   validateConfig(config);
 

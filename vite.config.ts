@@ -14,13 +14,10 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://api.perplexity.ai',
+        target: process.env.VITE_PROXY_TARGET || 'https://api.perplexity.ai',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
         secure: true,
-        headers: {
-          'Origin': 'https://api.perplexity.ai'
-        }
       },
     },
   },

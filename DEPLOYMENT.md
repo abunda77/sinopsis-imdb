@@ -40,15 +40,41 @@ The server will run on port 3000 (or PORT environment variable).
 
 **For Development (.env file):**
 ```env
-VITE_API_KEY=your-perplexity-api-key
+VITE_API_KEY=your-api-key
 VITE_MODEL_NAME=sonar
+LLM_API_TARGET=https://api.perplexity.ai/chat/completions
+VITE_PROXY_TARGET=https://api.perplexity.ai
 ```
 
 **For Production Server:**
 Set these on your hosting platform:
 ```bash
 PORT=3000  # Optional, defaults to 3000
+LLM_API_TARGET=https://api.perplexity.ai/chat/completions  # Optional, defaults to Perplexity
 ```
+
+### Supported LLM Providers
+
+The application works with any OpenAI-compatible API. Configure the proxy target based on your provider:
+
+**Perplexity AI:**
+```env
+VITE_API_KEY=pplx-your-key
+VITE_MODEL_NAME=sonar
+LLM_API_TARGET=https://api.perplexity.ai/chat/completions
+VITE_PROXY_TARGET=https://api.perplexity.ai
+```
+
+**OpenAI:**
+```env
+VITE_API_KEY=sk-your-key
+VITE_MODEL_NAME=gpt-4
+LLM_API_TARGET=https://api.openai.com/v1/chat/completions
+VITE_PROXY_TARGET=https://api.openai.com/v1
+```
+
+**Other OpenAI-compatible APIs:**
+Just set the appropriate API target and model name.
 
 ### Runtime Configuration
 

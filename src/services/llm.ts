@@ -103,9 +103,6 @@ Remember: Return ONLY the JSON object with synopsis (in Indonesian) and imdbScor
       // Always use relative path - will use Vite proxy in dev, needs backend proxy in production
       const apiUrl = '/api/chat/completions';
 
-      console.log('Sending request to:', apiUrl);
-      console.log('Request body:', JSON.stringify(request, null, 2));
-
       // Send request to LLM API
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -116,9 +113,6 @@ Remember: Return ONLY the JSON object with synopsis (in Indonesian) and imdbScor
         body: JSON.stringify(request)
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response ok:', response.ok);
-
       // Handle authentication errors
       if (response.status === 401) {
         throw new AuthenticationError();
@@ -127,7 +121,6 @@ Remember: Return ONLY the JSON object with synopsis (in Indonesian) and imdbScor
       // Handle other HTTP errors
       if (!response.ok) {
         const errorText = await response.text().catch(() => 'Unknown error');
-        console.error('API error response:', errorText);
         throw new LLMError(
           `LLM API request failed with status ${response.status}: ${errorText}`,
           response.status
@@ -136,22 +129,18 @@ Remember: Return ONLY the JSON object with synopsis (in Indonesian) and imdbScor
 
       // Parse response
       const data: LLMResponse = await response.json();
-      console.log('Response data:', data);
 
       // Validate response structure
       if (!data.choices || data.choices.length === 0 || !data.choices[0].message) {
-        console.error('Invalid response structure:', data);
         throw new ParsingError('Invalid response structure from LLM API');
       }
 
       const content = data.choices[0].message.content;
-      console.log('LLM content:', content);
 
       // Parse the movie information from the response
       return this.parseMovieInfo(content);
 
     } catch (error) {
-      console.error('Error in searchMovie:', error);
       // Re-throw our custom errors
       if (error instanceof LLMError) {
         throw error;
@@ -175,28 +164,20 @@ Remember: Return ONLY the JSON object with synopsis (in Indonesian) and imdbScor
    */
   private parseMovieInfo(content: string): MovieInfo {
     try {
-      console.log('Parsing movie info from content:', content.substring(0, 500));
-      
       // Remove markdown code blocks if present
       let cleanContent = content.trim();
       cleanContent = cleanContent.replace(/```json\s*/g, '').replace(/```\s*/g, '');
       
-      console.log('Clean content:', cleanContent.substring(0, 500));
-      
       // Try to extract JSON from the response
       const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
-        console.error('No JSON found in content');
         throw new ParsingError(`No JSON object found in LLM response. Response: ${content.substring(0, 200)}`);
       }
 
-      console.log('JSON match:', jsonMatch[0]);
       const parsed = JSON.parse(jsonMatch[0]);
-      console.log('Parsed object:', parsed);
 
       // Validate synopsis
       if (typeof parsed.synopsis !== 'string' || !parsed.synopsis.trim()) {
-        console.error('Invalid synopsis:', parsed.synopsis);
         throw new ParsingError('Missing or invalid synopsis in LLM response');
       }
 
@@ -209,7 +190,6 @@ Remember: Return ONLY the JSON object with synopsis (in Indonesian) and imdbScor
         // Try to parse string to number
         imdbScore = parseFloat(parsed.imdbScore);
         if (isNaN(imdbScore)) {
-          console.error('Invalid imdbScore string:', parsed.imdbScore);
           throw new ParsingError(`IMDb score is not a valid number: ${parsed.imdbScore}`);
         }
       } else if (parsed.imdb_score !== undefined) {
@@ -223,28 +203,20 @@ Remember: Return ONLY the JSON object with synopsis (in Indonesian) and imdbScor
           ? parsed.rating 
           : parseFloat(parsed.rating);
       } else {
-        console.error('No imdbScore field found. Parsed object:', parsed);
         throw new ParsingError('Missing IMDb score in LLM response. Expected field: imdbScore');
       }
 
-      console.log('Parsed imdbScore:', imdbScore);
-
       // Validate score range
       if (imdbScore < 0 || imdbScore > 10) {
-        console.error('imdbScore out of range:', imdbScore);
         throw new ParsingError(`IMDb score out of range (must be 0-10): ${imdbScore}`);
       }
 
-      const result = {
+      return {
         synopsis: parsed.synopsis.trim(),
         imdbScore: imdbScore
       };
-      
-      console.log('Final parsed result:', result);
-      return result;
 
     } catch (error) {
-      console.error('Error in parseMovieInfo:', error);
       if (error instanceof ParsingError) {
         throw error;
       }
