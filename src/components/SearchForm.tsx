@@ -63,8 +63,11 @@ export function SearchForm() {
       console.log('Search completed, movieInfo:', movieInfo);
 
       // Create movie result with current data
+      // Generate a simple unique ID (timestamp + random)
+      const id = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      
       const result = {
-        id: crypto.randomUUID(),
+        id,
         title: title.trim(),
         synopsis: movieInfo.synopsis,
         imdbScore: movieInfo.imdbScore,
