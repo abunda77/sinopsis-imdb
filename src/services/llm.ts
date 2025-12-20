@@ -40,20 +40,18 @@ export class ParsingError extends LLMError {
 export class LLMService {
   private apiKey: string = '';
   private modelName: string = '';
-  private apiBaseUrl: string = 'https://api.openai.com/v1';
 
   /**
    * Configure the LLM service with API credentials and settings
    * @param apiKey - API key for authentication
    * @param modelName - Model identifier to use for requests
-   * @param apiBaseUrl - Base URL for the API (optional)
+   * @param apiBaseUrl - Base URL for the API (optional, kept for backward compatibility but not used)
    */
   configure(apiKey: string, modelName: string, apiBaseUrl?: string): void {
     this.apiKey = apiKey;
     this.modelName = modelName;
-    if (apiBaseUrl) {
-      this.apiBaseUrl = apiBaseUrl;
-    }
+    // apiBaseUrl parameter kept for backward compatibility but not used
+    // All requests go through /api proxy in both dev and production
   }
 
   /**
