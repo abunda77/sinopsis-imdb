@@ -27,6 +27,8 @@ Movie Synopsis Finder adalah aplikasi web berbasis React TypeScript yang memungk
 - Node.js 18+ and npm
 - An API key for an OpenAI-compatible LLM service (OpenAI, Perplexity, Anthropic, etc.)
 
+**Note**: For production deployment, the app includes a Node.js Express server to handle CORS issues with LLM APIs. See [DEPLOYMENT.md](./DEPLOYMENT.md) for details.
+
 ## Installation
 
 ### Step-by-Step Setup
@@ -71,6 +73,8 @@ npm run dev
 ```
 
 The application will be available at `http://localhost:5173`
+
+**For production deployment**, see the [Running the Application](#running-the-application) section and [DEPLOYMENT.md](./DEPLOYMENT.md) for instructions on using the production server.
 
 ## Configuration
 
@@ -144,6 +148,8 @@ npm run dev
 
 The application will be available at `http://localhost:5173`
 
+In development mode, Vite's built-in proxy handles API requests to avoid CORS issues.
+
 ### Production Build
 
 Build the application for production:
@@ -151,10 +157,34 @@ Build the application for production:
 npm run build
 ```
 
-Preview the production build:
+Start the production server:
 ```bash
-npm run preview
+npm start
 ```
+
+The application will be available at `http://localhost:3000`
+
+**Important**: In production, the app uses a Node.js Express server (`server.js`) that:
+- Serves the built static files from the `dist` folder
+- Proxies API requests to avoid CORS issues with the Perplexity API
+- Handles SPA routing for client-side navigation
+
+### CORS Handling
+
+The application handles CORS differently in development and production:
+
+**Development Mode:**
+- Vite's dev server proxies `/api` requests to the LLM API
+- Configured in `vite.config.ts`
+- No CORS issues because the proxy server makes the actual API calls
+
+**Production Mode:**
+- Express server (`server.js`) proxies `/api` requests
+- Frontend always calls `/api/chat/completions` (relative path)
+- The proxy server adds proper headers and forwards requests to the LLM API
+- No CORS issues because requests come from the server, not the browser
+
+For detailed deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md).
 
 ## Running Tests
 
@@ -328,6 +358,16 @@ movie-synopsis-finder/
 - Verify the API base URL is correct and the service is accessible
 - Check if your firewall or antivirus is blocking the connection
 - Try a different network or disable VPN if applicable
+
+### CORS Errors in Production
+**Problem**: "Access to fetch has been blocked by CORS policy" error
+
+**Solution**: 
+- Make sure you're using the production server (`npm start`) instead of `npm run preview`
+- The Express server in `server.js` handles CORS by proxying requests
+- Verify `server.js` is running and serving the app
+- Check that API requests are going to `/api/chat/completions` (relative path)
+- For custom deployments, ensure your server proxies `/api` requests correctly
 
 ### Build Errors
 **Problem**: Build fails with TypeScript or dependency errors

@@ -98,10 +98,8 @@ IMPORTANT RULES:
     };
 
     try {
-      // Use proxy in development, direct API in production
-      const apiUrl = import.meta.env.DEV 
-        ? '/api/chat/completions' 
-        : `${this.apiBaseUrl}/chat/completions`;
+      // Always use relative path - will use Vite proxy in dev, needs backend proxy in production
+      const apiUrl = '/api/chat/completions';
 
       // Send request to LLM API
       const response = await fetch(apiUrl, {

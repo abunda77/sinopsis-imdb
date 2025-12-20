@@ -17,6 +17,10 @@ export default defineConfig({
         target: 'https://api.perplexity.ai',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
+        secure: true,
+        headers: {
+          'Origin': 'https://api.perplexity.ai'
+        }
       },
     },
   },
