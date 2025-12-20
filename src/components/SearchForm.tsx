@@ -55,8 +55,12 @@ export function SearchForm() {
       setIsLoading(true);
       setError(null);
 
+      console.log('Starting search for:', title);
+
       // Call LLM service to search for movie (Requirement 1.1)
       const movieInfo = await llmService.searchMovie(title);
+      
+      console.log('Search completed, movieInfo:', movieInfo);
 
       // Create movie result with current data
       const result = {
@@ -68,10 +72,15 @@ export function SearchForm() {
         savedAt: null,
       };
 
+      console.log('Created result object:', result);
+
       // Update app state with the result
       setCurrentResult(result);
       
+      console.log('Result set successfully');
+      
     } catch (error) {
+      console.error('Error in handleSubmit:', error);
       // Handle errors from LLM service (Requirement 1.4)
       if (error instanceof LLMError) {
         setError(error.message);
@@ -82,6 +91,7 @@ export function SearchForm() {
     } finally {
       // Clear loading state
       setIsLoading(false);
+      console.log('Search completed, loading set to false');
     }
   };
 
