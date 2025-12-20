@@ -28,7 +28,7 @@ describe('LLMService', () => {
           // Mock fetch to capture the request
           let capturedRequest: any = null;
           
-          global.fetch = vi.fn(async (_url, options) => {
+          globalThis.fetch = vi.fn(async (_url, options) => {
             if (options?.body) {
               capturedRequest = JSON.parse(options.body as string) as LLMRequest;
             }
@@ -117,7 +117,7 @@ describe('LLMService', () => {
             let capturedHeaders: Record<string, string> | null = null;
             let capturedRequest: any = null;
 
-            global.fetch = vi.fn(async (url, options) => {
+            globalThis.fetch = vi.fn(async (url, options) => {
               capturedUrl = url as string;
               capturedHeaders = options?.headers as Record<string, string>;
               if (options?.body) {
@@ -198,7 +198,7 @@ describe('LLMService', () => {
             // Capture the request URL
             let capturedUrl: string | null = null;
 
-            global.fetch = vi.fn(async (url, _options) => {
+            globalThis.fetch = vi.fn(async (url, _options) => {
               capturedUrl = url as string;
 
               // Return a valid mock response
@@ -252,7 +252,7 @@ describe('LLMService', () => {
       await fc.assert(
         fc.asyncProperty(movieTitleGen, async (movieTitle) => {
           // Mock fetch to return 401 authentication error
-          global.fetch = vi.fn(async () => {
+          globalThis.fetch = vi.fn(async () => {
             return {
               ok: false,
               status: 401,
@@ -299,7 +299,7 @@ describe('LLMService', () => {
       await fc.assert(
         fc.asyncProperty(movieTitleGen, errorStatusGen, async (movieTitle, statusCode) => {
           // Mock fetch to return non-401 error
-          global.fetch = vi.fn(async () => {
+          globalThis.fetch = vi.fn(async () => {
             return {
               ok: false,
               status: statusCode,
@@ -352,7 +352,7 @@ describe('LLMService', () => {
           });
 
           // Mock fetch to return the generated response
-          global.fetch = vi.fn(async () => {
+          globalThis.fetch = vi.fn(async () => {
             return {
               ok: true,
               status: 200,
@@ -397,7 +397,7 @@ describe('LLMService', () => {
           const responseContent = `Here's the movie information:\n\`\`\`json\n${jsonContent}\n\`\`\``;
 
           // Mock fetch to return the wrapped response
-          global.fetch = vi.fn(async () => {
+          globalThis.fetch = vi.fn(async () => {
             return {
               ok: true,
               status: 200,
@@ -439,7 +439,7 @@ describe('LLMService', () => {
           const responseContent = `Sure! Here's the information: ${jsonContent} Hope this helps!`;
 
           // Mock fetch to return the response with extra text
-          global.fetch = vi.fn(async () => {
+          globalThis.fetch = vi.fn(async () => {
             return {
               ok: true,
               status: 200,

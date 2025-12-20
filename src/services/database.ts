@@ -1,172 +1,182 @@
-import Database from 'better-sqlite3';
 import type { MovieResult } from '../types/models';
 
+const DB_NAME = 'movie-synopsis-db';
+const STORE_NAME = 'movie_results';
+const DB_VERSION = 1;
+
 /**
- * DatabaseService handles all SQLite database operations for movie results
+ * DatabaseService handles all IndexedDB operations for movie results
  */
 export class DatabaseService {
-  private db: Database.Database | null = null;
-  private readonly dbPath: string;
+  private db: IDBDatabase | null = null;
 
-  constructor(dbPath: string = 'movie-synopsis.db') {
-    this.dbPath = dbPath;
-  }
+  constructor() {}
 
   /**
    * Initialize the database and create the schema if it doesn't exist
    */
-  initialize(): void {
-    this.db = new Database(this.dbPath);
+  async initialize(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-    // Create the movie_results table with constraints
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS movie_results (
-        id TEXT PRIMARY KEY,
-        title TEXT NOT NULL UNIQUE,
-        synopsis TEXT NOT NULL,
-        imdb_score REAL NOT NULL,
-        searched_at TEXT NOT NULL,
-        saved_at TEXT NOT NULL,
-        CHECK (imdb_score >= 0 AND imdb_score <= 10)
-      );
+      request.onerror = () => reject(new Error('Failed to open database'));
+      
+      request.onsuccess = () => {
+        this.db = request.result;
+        resolve();
+      };
 
-      CREATE INDEX IF NOT EXISTS idx_title ON movie_results(title);
-      CREATE INDEX IF NOT EXISTS idx_saved_at ON movie_results(saved_at DESC);
-    `);
+      request.onupgradeneeded = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+          const objectStore = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+          objectStore.createIndex('title', 'title', { unique: true });
+          objectStore.createIndex('savedAt', 'savedAt', { unique: false });
+        }
+      };
+    });
   }
 
   /**
    * Save a movie result to the database
    * Throws an error if a result with the same title already exists
    */
-  saveResult(result: MovieResult): void {
+  async saveResult(result: MovieResult): Promise<void> {
     if (!this.db) {
       throw new Error('Database not initialized. Call initialize() first.');
     }
 
     // Check for duplicates
-    if (this.resultExists(result.title)) {
+    const exists = await this.resultExists(result.title);
+    if (exists) {
       throw new Error(`A movie with title "${result.title}" already exists in the database.`);
     }
 
-    const stmt = this.db.prepare(`
-      INSERT INTO movie_results (id, title, synopsis, imdb_score, searched_at, saved_at)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `);
-
-    stmt.run(
-      result.id,
-      result.title,
-      result.synopsis,
-      result.imdbScore,
-      result.searchedAt.toISOString(),
-      result.savedAt ? result.savedAt.toISOString() : new Date().toISOString()
-    );
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([STORE_NAME], 'readwrite');
+      const store = transaction.objectStore(STORE_NAME);
+      
+      const data = {
+        ...result,
+        searchedAt: result.searchedAt.toISOString(),
+        savedAt: result.savedAt ? result.savedAt.toISOString() : new Date().toISOString()
+      };
+      
+      const request = store.add(data);
+      
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(new Error('Failed to save result'));
+    });
   }
 
   /**
    * Get all movie results from the database, ordered by saved_at descending
    */
-  getAllResults(): MovieResult[] {
+  async getAllResults(): Promise<MovieResult[]> {
     if (!this.db) {
       throw new Error('Database not initialized. Call initialize() first.');
     }
 
-    const stmt = this.db.prepare(`
-      SELECT id, title, synopsis, imdb_score, searched_at, saved_at
-      FROM movie_results
-      ORDER BY saved_at DESC
-    `);
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([STORE_NAME], 'readonly');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.getAll();
 
-    const rows = stmt.all() as Array<{
-      id: string;
-      title: string;
-      synopsis: string;
-      imdb_score: number;
-      searched_at: string;
-      saved_at: string;
-    }>;
+      request.onsuccess = () => {
+        const results = request.result.map((row: any) => ({
+          id: row.id,
+          title: row.title,
+          synopsis: row.synopsis,
+          imdbScore: row.imdbScore,
+          searchedAt: new Date(row.searchedAt),
+          savedAt: new Date(row.savedAt)
+        }));
+        
+        // Sort by savedAt descending
+        results.sort((a, b) => b.savedAt.getTime() - a.savedAt.getTime());
+        resolve(results);
+      };
 
-    return rows.map(row => ({
-      id: row.id,
-      title: row.title,
-      synopsis: row.synopsis,
-      imdbScore: row.imdb_score,
-      searchedAt: new Date(row.searched_at),
-      savedAt: new Date(row.saved_at)
-    }));
+      request.onerror = () => reject(new Error('Failed to get results'));
+    });
   }
 
   /**
    * Get a specific movie result by ID
    */
-  getResultById(id: string): MovieResult | null {
+  async getResultById(id: string): Promise<MovieResult | null> {
     if (!this.db) {
       throw new Error('Database not initialized. Call initialize() first.');
     }
 
-    const stmt = this.db.prepare(`
-      SELECT id, title, synopsis, imdb_score, searched_at, saved_at
-      FROM movie_results
-      WHERE id = ?
-    `);
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([STORE_NAME], 'readonly');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.get(id);
 
-    const row = stmt.get(id) as {
-      id: string;
-      title: string;
-      synopsis: string;
-      imdb_score: number;
-      searched_at: string;
-      saved_at: string;
-    } | undefined;
+      request.onsuccess = () => {
+        const row = request.result;
+        if (!row) {
+          resolve(null);
+          return;
+        }
 
-    if (!row) {
-      return null;
-    }
+        resolve({
+          id: row.id,
+          title: row.title,
+          synopsis: row.synopsis,
+          imdbScore: row.imdbScore,
+          searchedAt: new Date(row.searchedAt),
+          savedAt: new Date(row.savedAt)
+        });
+      };
 
-    return {
-      id: row.id,
-      title: row.title,
-      synopsis: row.synopsis,
-      imdbScore: row.imdb_score,
-      searchedAt: new Date(row.searched_at),
-      savedAt: new Date(row.saved_at)
-    };
+      request.onerror = () => reject(new Error('Failed to get result'));
+    });
   }
 
   /**
    * Delete a movie result by ID
    */
-  deleteResult(id: string): void {
+  async deleteResult(id: string): Promise<void> {
     if (!this.db) {
       throw new Error('Database not initialized. Call initialize() first.');
     }
 
-    const stmt = this.db.prepare(`
-      DELETE FROM movie_results WHERE id = ?
-    `);
-
-    const result = stmt.run(id);
-
-    if (result.changes === 0) {
+    // Check if exists first
+    const exists = await this.getResultById(id);
+    if (!exists) {
       throw new Error(`No movie result found with id "${id}".`);
     }
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([STORE_NAME], 'readwrite');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.delete(id);
+
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(new Error('Failed to delete result'));
+    });
   }
 
   /**
    * Check if a movie result with the given title already exists
    */
-  resultExists(title: string): boolean {
+  async resultExists(title: string): Promise<boolean> {
     if (!this.db) {
       throw new Error('Database not initialized. Call initialize() first.');
     }
 
-    const stmt = this.db.prepare(`
-      SELECT COUNT(*) as count FROM movie_results WHERE title = ?
-    `);
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([STORE_NAME], 'readonly');
+      const store = transaction.objectStore(STORE_NAME);
+      const index = store.index('title');
+      const request = index.get(title);
 
-    const result = stmt.get(title) as { count: number };
-    return result.count > 0;
+      request.onsuccess = () => resolve(!!request.result);
+      request.onerror = () => reject(new Error('Failed to check if result exists'));
+    });
   }
 
   /**

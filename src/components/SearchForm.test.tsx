@@ -18,7 +18,7 @@ vi.mock('../lib/config', () => ({
 }));
 
 // Mock fetch for LLM API calls
-global.fetch = vi.fn();
+globalThis.fetch = vi.fn();
 
 describe('SearchForm', () => {
   beforeEach(() => {
@@ -69,7 +69,7 @@ describe('SearchForm', () => {
 
   it('shows loading state during search', async () => {
     // Mock a delayed response
-    (global.fetch as any).mockImplementation(() => 
+    (globalThis.fetch as any).mockImplementation(() => 
       new Promise(resolve => setTimeout(() => resolve({
         ok: true,
         json: async () => ({
@@ -97,7 +97,7 @@ describe('SearchForm', () => {
   });
 
   it('calls LLM service with movie title on submit', async () => {
-    (global.fetch as any).mockResolvedValue({
+    (globalThis.fetch as any).mockResolvedValue({
       ok: true,
       json: async () => ({
         choices: [{
@@ -118,7 +118,7 @@ describe('SearchForm', () => {
     fireEvent.click(submitButton);
     
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(
+      expect(globalThis.fetch).toHaveBeenCalledWith(
         expect.stringContaining('/chat/completions'),
         expect.objectContaining({
           method: 'POST',
@@ -168,7 +168,7 @@ describe('SearchForm', () => {
         fc.integer({ min: 20, max: 100 }),
         async (movieTitle, delayMs) => {
           // Mock a delayed LLM response
-          (global.fetch as any).mockImplementation(() => 
+          (globalThis.fetch as any).mockImplementation(() => 
             new Promise(resolve => setTimeout(() => resolve({
               ok: true,
               json: async () => ({

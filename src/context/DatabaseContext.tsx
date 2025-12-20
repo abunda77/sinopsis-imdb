@@ -12,17 +12,17 @@ interface DatabaseContextValue {
   /** Database service instance */
   databaseService: DatabaseService | null;
   /** Initialize the database */
-  initializeDatabase: (dbPath?: string) => void;
+  initializeDatabase: () => Promise<void>;
   /** Save a movie result to the database */
   saveResult: (result: MovieResult) => Promise<void>;
   /** Load all results from the database */
-  loadResults: () => void;
+  loadResults: () => Promise<void>;
   /** Delete a result by ID */
   deleteResult: (id: string) => Promise<void>;
   /** Check if a result with the given title exists */
-  resultExists: (title: string) => boolean;
+  resultExists: (title: string) => Promise<boolean>;
   /** Get a result by ID */
-  getResultById: (id: string) => MovieResult | null;
+  getResultById: (id: string) => Promise<MovieResult | null>;
 }
 
 /**
@@ -47,13 +47,13 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
   /**
    * Initialize the database service
    */
-  const initializeDatabase = useCallback((dbPath?: string) => {
-    const service = new DatabaseService(dbPath);
-    service.initialize();
+  const initializeDatabase = useCallback(async () => {
+    const service = new DatabaseService();
+    await service.initialize();
     setDatabaseService(service);
     
     // Load initial results
-    const results = service.getAllResults();
+    const results = await service.getAllResults();
     setSavedResults(results);
   }, []);
 
@@ -66,23 +66,23 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
       throw new Error('Database not initialized');
     }
 
-    // Save to database (synchronous operation)
-    databaseService.saveResult(result);
+    // Save to database
+    await databaseService.saveResult(result);
 
     // Update local state
-    const updatedResults = databaseService.getAllResults();
+    const updatedResults = await databaseService.getAllResults();
     setSavedResults(updatedResults);
   }, [databaseService]);
 
   /**
    * Load all results from the database
    */
-  const loadResults = useCallback(() => {
+  const loadResults = useCallback(async () => {
     if (!databaseService) {
       throw new Error('Database not initialized');
     }
 
-    const results = databaseService.getAllResults();
+    const results = await databaseService.getAllResults();
     setSavedResults(results);
   }, [databaseService]);
 
@@ -95,32 +95,32 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
       throw new Error('Database not initialized');
     }
 
-    // Delete from database (synchronous operation)
-    databaseService.deleteResult(id);
+    // Delete from database
+    await databaseService.deleteResult(id);
 
     // Update local state
-    const updatedResults = databaseService.getAllResults();
+    const updatedResults = await databaseService.getAllResults();
     setSavedResults(updatedResults);
   }, [databaseService]);
 
   /**
    * Check if a result with the given title exists
    */
-  const resultExists = useCallback((title: string): boolean => {
+  const resultExists = useCallback(async (title: string): Promise<boolean> => {
     if (!databaseService) {
       return false;
     }
-    return databaseService.resultExists(title);
+    return await databaseService.resultExists(title);
   }, [databaseService]);
 
   /**
    * Get a result by ID
    */
-  const getResultById = useCallback((id: string): MovieResult | null => {
+  const getResultById = useCallback(async (id: string): Promise<MovieResult | null> => {
     if (!databaseService) {
       return null;
     }
-    return databaseService.getResultById(id);
+    return await databaseService.getResultById(id);
   }, [databaseService]);
 
   const value: DatabaseContextValue = {

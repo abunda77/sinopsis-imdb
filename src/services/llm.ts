@@ -69,26 +69,42 @@ export class LLMService {
       throw new LLMError('LLM service not configured. Call configure() first.');
     }
 
-    // Create the structured prompt
+    // Create the structured prompt with clear instructions
     const request: LLMRequest = {
       model: this.modelName,
       messages: [
         {
           role: 'system',
-          content: 'You are a movie information assistant. When given a movie title, respond with a JSON object containing the movie\'s synopsis and IMDb score. Translate the synopsis to Indonesian language.'
+          content: `You are a movie information assistant. When given a movie title, you MUST respond with ONLY a valid JSON object in this exact format:
+{
+  "synopsis": "Movie synopsis in Indonesian language",
+  "imdbScore": 7.5
+}
+
+IMPORTANT RULES:
+- The imdbScore MUST be a number between 0 and 10 (e.g., 7.5, 8.2, 6.0)
+- Do NOT use strings for imdbScore (wrong: "7.5", correct: 7.5)
+- Translate the synopsis to Indonesian language
+- Do NOT include any text outside the JSON object
+- If you cannot find the exact IMDb score, provide your best estimate as a number`
         },
         {
           role: 'user',
-          content: title
+          content: `Find information for the movie: ${title}`
         }
       ],
-      temperature: 0.7,
-      max_tokens: 500
+      temperature: 0.3,
+      max_tokens: 600
     };
 
     try {
+      // Use proxy in development, direct API in production
+      const apiUrl = import.meta.env.DEV 
+        ? '/api/chat/completions' 
+        : `${this.apiBaseUrl}/chat/completions`;
+
       // Send request to LLM API
-      const response = await fetch(`${this.apiBaseUrl}/chat/completions`, {
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -148,27 +164,56 @@ export class LLMService {
    */
   private parseMovieInfo(content: string): MovieInfo {
     try {
+      // Remove markdown code blocks if present
+      let cleanContent = content.trim();
+      cleanContent = cleanContent.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+      
       // Try to extract JSON from the response
-      // The LLM might wrap the JSON in markdown code blocks or add extra text
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
-        throw new ParsingError('No JSON object found in LLM response');
+        throw new ParsingError(`No JSON object found in LLM response. Response: ${content.substring(0, 200)}`);
       }
 
       const parsed = JSON.parse(jsonMatch[0]);
 
-      // Validate required fields
+      // Validate synopsis
       if (typeof parsed.synopsis !== 'string' || !parsed.synopsis.trim()) {
         throw new ParsingError('Missing or invalid synopsis in LLM response');
       }
 
-      if (typeof parsed.imdbScore !== 'number' || parsed.imdbScore < 0 || parsed.imdbScore > 10) {
-        throw new ParsingError('Missing or invalid IMDb score in LLM response (must be 0-10)');
+      // Handle IMDb score - convert string to number if needed
+      let imdbScore: number;
+      
+      if (typeof parsed.imdbScore === 'number') {
+        imdbScore = parsed.imdbScore;
+      } else if (typeof parsed.imdbScore === 'string') {
+        // Try to parse string to number
+        imdbScore = parseFloat(parsed.imdbScore);
+        if (isNaN(imdbScore)) {
+          throw new ParsingError(`IMDb score is not a valid number: ${parsed.imdbScore}`);
+        }
+      } else if (parsed.imdb_score !== undefined) {
+        // Try alternative field name
+        imdbScore = typeof parsed.imdb_score === 'number' 
+          ? parsed.imdb_score 
+          : parseFloat(parsed.imdb_score);
+      } else if (parsed.rating !== undefined) {
+        // Try another alternative field name
+        imdbScore = typeof parsed.rating === 'number' 
+          ? parsed.rating 
+          : parseFloat(parsed.rating);
+      } else {
+        throw new ParsingError('Missing IMDb score in LLM response. Expected field: imdbScore');
+      }
+
+      // Validate score range
+      if (imdbScore < 0 || imdbScore > 10) {
+        throw new ParsingError(`IMDb score out of range (must be 0-10): ${imdbScore}`);
       }
 
       return {
         synopsis: parsed.synopsis.trim(),
-        imdbScore: parsed.imdbScore
+        imdbScore: imdbScore
       };
 
     } catch (error) {
@@ -177,7 +222,7 @@ export class LLMService {
       }
 
       if (error instanceof SyntaxError) {
-        throw new ParsingError('Failed to parse JSON from LLM response');
+        throw new ParsingError(`Failed to parse JSON from LLM response: ${error.message}`);
       }
 
       throw new ParsingError(`Unexpected error parsing LLM response: ${error instanceof Error ? error.message : 'Unknown error'}`);

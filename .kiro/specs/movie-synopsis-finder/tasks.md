@@ -238,15 +238,39 @@
   - **Property 5: Error display on LLM failure**
   - **Validates: Requirements 1.4**
 
-- [ ]* 9.2 Write property test for save updates sidebar
+- [x] 9.2 Write property test for save updates sidebar
+
+
+
+
+
+
+
+
   - **Property 8: Save updates sidebar**
   - **Validates: Requirements 2.5**
 
-- [ ]* 9.3 Write property test for save error preserves state
+
+
+- [ ] 9.3 Write property test for save error preserves state
+
+
+
+
+
+
+
+
+
   - **Property 9: Save error preserves state**
   - **Validates: Requirements 2.3**
 
-- [ ]* 9.4 Write property test for retry uses same title
+- [ ] 9.4 Write property test for retry uses same title
+
+
+
+
+
   - **Property 10: Retry uses same title**
   - **Validates: Requirements 3.1**
 
@@ -254,7 +278,12 @@
   - **Property 11: Retry works regardless of save status**
   - **Validates: Requirements 3.4**
 
-- [ ] 10. Implement Sidebar component
+- [x] 10. Implement Sidebar component
+
+
+
+
+
   - Create components/Sidebar.tsx
   - Display list of saved movie results using shadcn/ui Card components
   - Show movie title and synopsis preview for each entry
@@ -290,6 +319,10 @@
   - **Validates: Requirements 5.4**
 
 - [ ] 11. Implement main App component
+
+
+
+
   - Create App.tsx as main container
   - Setup context providers (AppContext, DatabaseContext, ConfigContext)
   - Initialize database on component mount
@@ -304,7 +337,12 @@
   - **Property 22: Responsive layout adaptation**
   - **Validates: Requirements 7.3**
 
-- [ ] 12. Implement interactive element feedback
+- [x] 12. Implement interactive element feedback
+
+
+
+
+
   - Add hover and focus styles to all buttons using TailwindCSS
   - Add hover and focus styles to sidebar entries
   - Add hover and focus styles to input fields
@@ -316,13 +354,23 @@
   - **Property 23: Interactive element feedback**
   - **Validates: Requirements 7.5**
 
-- [ ] 13. Setup environment configuration
+
+
+- [x] 13. Setup environment configuration
+
+
+
   - Create .env.example file with API_KEY, MODEL_NAME, API_BASE_URL placeholders
   - Create .env file for local development (add to .gitignore)
   - Document environment variables in README.md
   - _Requirements: 6.1, 6.2_
 
-- [ ] 14. Add error boundary and global error handling
+- [x] 14. Add error boundary and global error handling
+
+
+
+
+
   - Create components/ErrorBoundary.tsx for React error catching
   - Implement global error handler for unhandled promise rejections
   - Display user-friendly error messages
@@ -330,9 +378,18 @@
   - _Requirements: 1.4, 2.3, 5.3_
 
 - [ ] 15. Checkpoint - Ensure all tests pass
+
+
+
+
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 16. Create README documentation
+- [x] 16. Create README documentation
+
+
+
+
+
   - Document project setup and installation steps
   - Document environment variable configuration
   - Document how to run the application
