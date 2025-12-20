@@ -26,8 +26,9 @@ function validateConfig(config: Partial<AppConfig>): asserts config is AppConfig
     missingFields.push('MODEL_NAME');
   }
 
-  if (!config.apiBaseUrl || config.apiBaseUrl.trim() === '') {
-    missingFields.push('API_BASE_URL');
+  // apiBaseUrl is optional now since we use proxy
+  if (!config.apiBaseUrl) {
+    config.apiBaseUrl = 'https://api.openai.com/v1'; // default value
   }
 
   if (missingFields.length > 0) {
