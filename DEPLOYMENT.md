@@ -11,23 +11,53 @@ The app uses a Node.js proxy server to handle CORS issues with the Perplexity AP
 npm install
 ```
 
-2. Build the app:
+2. Create `.env` file with your API credentials:
+```bash
+cp .env.example .env
+# Edit .env and add your API key and model name
+```
+
+3. Build the app:
 ```bash
 npm run build
 ```
 
-3. Set environment variables on your server:
-```bash
-VITE_API_KEY=your-perplexity-api-key
-VITE_MODEL_NAME=sonar
-VITE_API_BASE_URL=https://api.perplexity.ai/chat/completions
-PORT=3000
-```
+This will:
+- Compile TypeScript
+- Build the Vite app
+- Generate `dist/config.js` from your `.env` file (runtime config)
 
 4. Start the production server:
 ```bash
 npm start
 ```
+
+The server will run on port 3000 (or PORT environment variable).
+
+## Configuration
+
+### Environment Variables
+
+**For Development (.env file):**
+```env
+VITE_API_KEY=your-perplexity-api-key
+VITE_MODEL_NAME=sonar
+```
+
+**For Production Server:**
+Set these on your hosting platform:
+```bash
+PORT=3000  # Optional, defaults to 3000
+```
+
+### Runtime Configuration
+
+The app uses a hybrid configuration approach:
+
+- **Development**: Reads from `.env` file via Vite's `import.meta.env`
+- **Production**: Reads from `dist/config.js` (generated during build)
+
+The `npm run build` command automatically generates `dist/config.js` from your `.env` file, so your API credentials are embedded at build time but can be updated by editing `dist/config.js` without rebuilding.
 
 ## How It Works
 

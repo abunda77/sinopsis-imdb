@@ -1,6 +1,18 @@
 import type { AppConfig } from '../types/models';
 
 /**
+ * Runtime config interface for window object
+ */
+declare global {
+  interface Window {
+    __APP_CONFIG__?: {
+      apiKey?: string;
+      modelName?: string;
+    };
+  }
+}
+
+/**
  * Configuration error thrown when required environment variables are missing
  */
 export class ConfigurationError extends Error {
@@ -34,20 +46,23 @@ function validateConfig(config: Partial<AppConfig>): asserts config is AppConfig
   if (missingFields.length > 0) {
     throw new ConfigurationError(
       `Missing required configuration: ${missingFields.join(', ')}. ` +
-      `Please set these environment variables.`
+      `Please set these environment variables or update config.js file.`
     );
   }
 }
 
 /**
- * Loads and validates application configuration from environment variables
+ * Loads and validates application configuration from environment variables or runtime config
  * @returns {AppConfig} The validated configuration object
  * @throws {ConfigurationError} If required configuration is missing
  */
 export function loadConfig(): AppConfig {
+  // Try runtime config first (for production), then fall back to env vars (for development)
+  const runtimeConfig = window.__APP_CONFIG__;
+  
   const config: Partial<AppConfig> = {
-    apiKey: import.meta.env.VITE_API_KEY,
-    modelName: import.meta.env.VITE_MODEL_NAME,
+    apiKey: runtimeConfig?.apiKey || import.meta.env.VITE_API_KEY,
+    modelName: runtimeConfig?.modelName || import.meta.env.VITE_MODEL_NAME,
     apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'https://api.openai.com/v1',
   };
 
