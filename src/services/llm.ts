@@ -99,6 +99,9 @@ IMPORTANT RULES:
       // Always use relative path - will use Vite proxy in dev, needs backend proxy in production
       const apiUrl = '/api/chat/completions';
 
+      console.log('Sending request to:', apiUrl);
+      console.log('Request body:', JSON.stringify(request, null, 2));
+
       // Send request to LLM API
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -109,6 +112,9 @@ IMPORTANT RULES:
         body: JSON.stringify(request)
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+
       // Handle authentication errors
       if (response.status === 401) {
         throw new AuthenticationError();
@@ -117,6 +123,7 @@ IMPORTANT RULES:
       // Handle other HTTP errors
       if (!response.ok) {
         const errorText = await response.text().catch(() => 'Unknown error');
+        console.error('API error response:', errorText);
         throw new LLMError(
           `LLM API request failed with status ${response.status}: ${errorText}`,
           response.status
@@ -125,18 +132,22 @@ IMPORTANT RULES:
 
       // Parse response
       const data: LLMResponse = await response.json();
+      console.log('Response data:', data);
 
       // Validate response structure
       if (!data.choices || data.choices.length === 0 || !data.choices[0].message) {
+        console.error('Invalid response structure:', data);
         throw new ParsingError('Invalid response structure from LLM API');
       }
 
       const content = data.choices[0].message.content;
+      console.log('LLM content:', content);
 
       // Parse the movie information from the response
       return this.parseMovieInfo(content);
 
     } catch (error) {
+      console.error('Error in searchMovie:', error);
       // Re-throw our custom errors
       if (error instanceof LLMError) {
         throw error;
