@@ -38,20 +38,16 @@ export class ParsingError extends LLMError {
  * LLMService handles communication with OpenAI-compatible LLM APIs
  */
 export class LLMService {
-  private apiKey: string = '';
   private modelName: string = '';
 
   /**
-   * Configure the LLM service with API credentials and settings
-   * @param apiKey - API key for authentication
+   * Configure the LLM service with settings
    * @param modelName - Model identifier to use for requests
-   * @param _apiBaseUrl - Base URL for the API (optional, kept for backward compatibility but not used)
    */
-  configure(apiKey: string, modelName: string, _apiBaseUrl?: string): void {
-    this.apiKey = apiKey;
+  configure(modelName: string): void {
     this.modelName = modelName;
-    // _apiBaseUrl parameter kept for backward compatibility but not used
-    // All requests go through /api proxy in both dev and production
+    // No API key here: the browser never holds credentials. server.js injects
+    // the server-side key into the upstream Authorization header.
   }
 
   /**
@@ -63,7 +59,7 @@ export class LLMService {
    * @throws {ParsingError} If response parsing fails
    */
   async searchMovie(title: string): Promise<MovieInfo> {
-    if (!this.apiKey || !this.modelName) {
+    if (!this.modelName) {
       throw new LLMError('LLM service not configured. Call configure() first.');
     }
 
@@ -107,8 +103,7 @@ Remember: Return ONLY the JSON object with synopsis (in Indonesian) and imdbScor
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(request)
       });

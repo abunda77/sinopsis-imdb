@@ -60,11 +60,6 @@ export class ValidationService {
   validateConfig(config: AppConfig): ValidationResult {
     const errors: string[] = [];
 
-    // Validate API key
-    if (!config.apiKey || config.apiKey.trim().length === 0) {
-      errors.push('API key is required');
-    }
-
     // Validate model name
     if (!config.modelName || config.modelName.trim().length === 0) {
       errors.push('Model name is required');

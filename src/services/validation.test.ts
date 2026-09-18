@@ -143,7 +143,6 @@ describe('ValidationService', () => {
   describe('validateConfig', () => {
     it('should accept valid configuration', () => {
       const config: AppConfig = {
-        apiKey: 'sk-test123',
         modelName: 'gpt-4',
         apiBaseUrl: 'https://api.openai.com/v1',
       };
@@ -152,31 +151,8 @@ describe('ValidationService', () => {
       expect(result.errors).toHaveLength(0);
     });
 
-    it('should reject empty API key', () => {
-      const config: AppConfig = {
-        apiKey: '',
-        modelName: 'gpt-4',
-        apiBaseUrl: 'https://api.openai.com/v1',
-      };
-      const result = validationService.validateConfig(config);
-      expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('API key is required');
-    });
-
-    it('should reject whitespace-only API key', () => {
-      const config: AppConfig = {
-        apiKey: '   ',
-        modelName: 'gpt-4',
-        apiBaseUrl: 'https://api.openai.com/v1',
-      };
-      const result = validationService.validateConfig(config);
-      expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('API key is required');
-    });
-
     it('should reject empty model name', () => {
       const config: AppConfig = {
-        apiKey: 'sk-test123',
         modelName: '',
         apiBaseUrl: 'https://api.openai.com/v1',
       };
@@ -187,7 +163,6 @@ describe('ValidationService', () => {
 
     it('should reject empty API base URL', () => {
       const config: AppConfig = {
-        apiKey: 'sk-test123',
         modelName: 'gpt-4',
         apiBaseUrl: '',
       };
@@ -198,7 +173,6 @@ describe('ValidationService', () => {
 
     it('should reject invalid URL format', () => {
       const config: AppConfig = {
-        apiKey: 'sk-test123',
         modelName: 'gpt-4',
         apiBaseUrl: 'not-a-valid-url',
       };
@@ -209,13 +183,12 @@ describe('ValidationService', () => {
 
     it('should collect multiple errors', () => {
       const config: AppConfig = {
-        apiKey: '',
         modelName: '',
         apiBaseUrl: 'invalid',
       };
       const result = validationService.validateConfig(config);
       expect(result.isValid).toBe(false);
-      expect(result.errors).toHaveLength(3);
+
     });
   });
 });

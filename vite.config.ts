@@ -13,11 +13,14 @@ export default defineConfig({
   },
   server: {
     proxy: {
+      // Route /api through the local Express server so it can inject the
+      // server-side OpenRouter key. The browser never holds a credential.
       '/api': {
-        target: process.env.VITE_PROXY_TARGET || 'https://api.perplexity.ai',
+        target:
+          process.env.VITE_DEV_PROXY_TARGET ||
+          `http://localhost:${process.env.PORT || 3200}`,
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
-        secure: true,
+        secure: false,
       },
     },
   },

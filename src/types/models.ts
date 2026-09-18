@@ -30,8 +30,6 @@ export interface MovieInfo {
  * Application configuration from environment variables
  */
 export interface AppConfig {
-  /** API key for LLM service */
-  apiKey: string;
   /** Model name to use for LLM requests */
   modelName: string;
   /** Base URL for API (default: https://api.openai.com/v1) */

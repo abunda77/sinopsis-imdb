@@ -7,7 +7,6 @@ describe('Configuration Management', () => {
 
   beforeEach(() => {
     // Reset environment variables before each test
-    import.meta.env.VITE_API_KEY = '';
     import.meta.env.VITE_MODEL_NAME = '';
     import.meta.env.VITE_API_BASE_URL = '';
   });
@@ -19,56 +18,45 @@ describe('Configuration Management', () => {
 
   describe('loadConfig', () => {
     it('should load valid configuration', () => {
-      import.meta.env.VITE_API_KEY = 'test-api-key';
-      import.meta.env.VITE_MODEL_NAME = 'gpt-4';
+        import.meta.env.VITE_MODEL_NAME = 'gpt-4';
       import.meta.env.VITE_API_BASE_URL = 'https://api.openai.com/v1';
 
       const config = loadConfig();
 
-      expect(config.apiKey).toBe('test-api-key');
       expect(config.modelName).toBe('gpt-4');
       expect(config.apiBaseUrl).toBe('https://api.openai.com/v1');
     });
 
     it('should use default API base URL if not provided', () => {
-      import.meta.env.VITE_API_KEY = 'test-api-key';
-      import.meta.env.VITE_MODEL_NAME = 'gpt-4';
+        import.meta.env.VITE_MODEL_NAME = 'gpt-4';
 
       const config = loadConfig();
 
       expect(config.apiBaseUrl).toBe('https://api.openai.com/v1');
     });
 
-    it('should throw ConfigurationError when API_KEY is missing', () => {
+    it('should NOT require API_KEY: the key stays server-side', () => {
       import.meta.env.VITE_MODEL_NAME = 'gpt-4';
 
-      expect(() => loadConfig()).toThrow(ConfigurationError);
-      expect(() => loadConfig()).toThrow(/Missing required configuration.*API_KEY/);
+      const config = loadConfig();
+      expect(config.modelName).toBe('gpt-4');
+      // The browser must never receive a credential
+      expect(config).not.toHaveProperty('apiKey');
     });
 
     it('should throw ConfigurationError when MODEL_NAME is missing', () => {
-      import.meta.env.VITE_API_KEY = 'test-api-key';
-
+  
       expect(() => loadConfig()).toThrow(ConfigurationError);
       expect(() => loadConfig()).toThrow(/Missing required configuration.*MODEL_NAME/);
     });
 
     it('should throw ConfigurationError when multiple fields are missing', () => {
       expect(() => loadConfig()).toThrow(ConfigurationError);
-      expect(() => loadConfig()).toThrow(/API_KEY.*MODEL_NAME/);
-    });
-
-    it('should reject empty string API_KEY', () => {
-      import.meta.env.VITE_API_KEY = '   ';
-      import.meta.env.VITE_MODEL_NAME = 'gpt-4';
-
-      expect(() => loadConfig()).toThrow(ConfigurationError);
-      expect(() => loadConfig()).toThrow(/API_KEY/);
+      expect(() => loadConfig()).toThrow(/MODEL_NAME/);
     });
 
     it('should reject empty string MODEL_NAME', () => {
-      import.meta.env.VITE_API_KEY = 'test-api-key';
-      import.meta.env.VITE_MODEL_NAME = '   ';
+        import.meta.env.VITE_MODEL_NAME = '   ';
 
       expect(() => loadConfig()).toThrow(ConfigurationError);
       expect(() => loadConfig()).toThrow(/MODEL_NAME/);
@@ -77,14 +65,12 @@ describe('Configuration Management', () => {
 
   describe('tryLoadConfig', () => {
     it('should return config when valid', () => {
-      import.meta.env.VITE_API_KEY = 'test-api-key';
-      import.meta.env.VITE_MODEL_NAME = 'gpt-4';
+        import.meta.env.VITE_MODEL_NAME = 'gpt-4';
 
       const result = tryLoadConfig();
 
       expect(result.config).toBeDefined();
       expect(result.error).toBeUndefined();
-      expect(result.config?.apiKey).toBe('test-api-key');
     });
 
     it('should return error message when configuration is invalid', () => {
@@ -96,8 +82,7 @@ describe('Configuration Management', () => {
     });
 
     it('should return specific error message for missing fields', () => {
-      import.meta.env.VITE_API_KEY = 'test-api-key';
-
+  
       const result = tryLoadConfig();
 
       expect(result.error).toContain('MODEL_NAME');
@@ -115,20 +100,17 @@ describe('Configuration Management', () => {
     it('should show error for any missing required configuration', () => {
       // Generator for configuration with at least one missing field
       const incompleteConfigGen = fc.record({
-        apiKey: fc.option(fc.string(), { nil: undefined }),
         modelName: fc.option(fc.string(), { nil: undefined }),
         apiBaseUrl: fc.option(fc.string(), { nil: undefined }),
       }).filter(config => {
         // Ensure at least one required field is missing or empty
-        const hasEmptyApiKey = !config.apiKey || config.apiKey.trim() === '';
         const hasEmptyModelName = !config.modelName || config.modelName.trim() === '';
-        return hasEmptyApiKey || hasEmptyModelName;
+        return hasEmptyModelName;
       });
 
       fc.assert(
         fc.property(incompleteConfigGen, (config) => {
           // Set up environment with the incomplete configuration
-          import.meta.env.VITE_API_KEY = config.apiKey || '';
           import.meta.env.VITE_MODEL_NAME = config.modelName || '';
           import.meta.env.VITE_API_BASE_URL = config.apiBaseUrl || '';
 
@@ -141,9 +123,6 @@ describe('Configuration Management', () => {
           expect(result.error).toContain('Missing required configuration');
 
           // Verify the error message mentions the missing field(s)
-          if (!config.apiKey || config.apiKey.trim() === '') {
-            expect(result.error).toContain('API_KEY');
-          }
           if (!config.modelName || config.modelName.trim() === '') {
             expect(result.error).toContain('MODEL_NAME');
           }

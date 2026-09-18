@@ -11,7 +11,6 @@ import type { MovieResult } from '../types/models';
 vi.mock('../lib/config', () => ({
   tryLoadConfig: vi.fn(() => ({
     config: {
-      apiKey: 'test-api-key',
       modelName: 'test-model',
       apiBaseUrl: 'https://api.test.com/v1'
     },

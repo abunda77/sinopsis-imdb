@@ -8,7 +8,7 @@ describe('LLMService', () => {
 
   beforeEach(() => {
     llmService = new LLMService();
-    llmService.configure('test-api-key', 'gpt-4', 'https://api.test.com/v1');
+    llmService.configure('gpt-4');
   });
 
   /**
@@ -87,35 +87,25 @@ describe('LLMService', () => {
    * Validates: Requirements 6.4
    * 
    * Property: For any LLM request made by the application, the request should use
-   * the API key and model name from the application configuration.
+   * the configured model name. The API key is injected server-side, so it must
+   * never appear in a browser request.
    */
   describe('Property 20: LLM requests use configured values', () => {
-    it('should use configured API key, model name, and base URL for any search request', async () => {
-      // Generators for configuration values
-      const apiKeyGen = fc.string({ minLength: 10, maxLength: 50 });
+    it('should use the configured model name and the backend proxy URL for any search request', async () => {
       const modelNameGen = fc.constantFrom('gpt-4', 'gpt-3.5-turbo', 'claude-2', 'llama-2');
-      const baseUrlGen = fc.constantFrom(
-        'https://api.openai.com/v1',
-        'https://api.anthropic.com/v1',
-        'https://api.custom.com/v1'
-      );
       const movieTitleGen = fc.string({ minLength: 1 }).filter(s => s.trim().length > 0);
 
       await fc.assert(
         fc.asyncProperty(
-          apiKeyGen,
           modelNameGen,
-          baseUrlGen,
           movieTitleGen,
-          async (apiKey, modelName, baseUrl, movieTitle) => {
-            // Create a new service instance and configure it
+          async (modelName, movieTitle) => {
             const service = new LLMService();
-            service.configure(apiKey, modelName, baseUrl);
+            service.configure(modelName);
 
-            // Capture the request details
             let capturedUrl: string | null = null;
             let capturedHeaders: Record<string, string> | null = null;
-            let capturedRequest: any = null;
+            let capturedRequest: LLMRequest | null = null;
 
             globalThis.fetch = vi.fn(async (url, options) => {
               capturedUrl = url as string;
@@ -123,52 +113,48 @@ describe('LLMService', () => {
               if (options?.body) {
                 capturedRequest = JSON.parse(options.body as string) as LLMRequest;
               }
-
-              // Return a valid mock response
               return {
                 ok: true,
                 status: 200,
                 json: async () => ({
-                  choices: [{
-                    message: {
-                      content: JSON.stringify({
-                        synopsis: 'Test synopsis',
-                        imdbScore: 7.5
-                      })
+                  choices: [
+                    {
+                      message: {
+                        content: JSON.stringify({
+                          synopsis: 'Test synopsis',
+                          imdbScore: 7.5
+                        })
+                      }
                     }
-                  }]
+                  ]
                 })
               } as Response;
             });
 
             try {
-              // Execute the search
               await service.searchMovie(movieTitle);
 
-              // Property 1: The request URL should use the configured base URL
-              expect(capturedUrl).toBe(`${baseUrl}/chat/completions`);
+              // Property: every request goes through the backend proxy
+              expect(capturedUrl).toBe('/api/chat/completions');
 
-              // Property 2: The request should include the configured API key in Authorization header
-              expect(capturedHeaders).not.toBeNull();
-              if (capturedHeaders !== null) {
-                expect(capturedHeaders['Authorization']).toBe(`Bearer ${apiKey}`);
-              }
-
-              // Property 3: The request should use the configured model name
+              // Property: the request uses the configured model name
               expect(capturedRequest).not.toBeNull();
               if (capturedRequest !== null) {
-                expect(capturedRequest.model).toBe(modelName);
+                expect((capturedRequest as LLMRequest).model).toBe(modelName);
+              }
+
+              // Security property: no credentials ever leave the browser
+              if (capturedHeaders !== null) {
+                const headerNames = Object.keys(capturedHeaders).map(k => k.toLowerCase());
+                expect(headerNames).not.toContain('authorization');
               }
 
               return true;
             } catch (_error) {
-              // If there's an error, check if the configuration was used correctly
-              // before the error occurred
-              if (capturedUrl && capturedHeaders && capturedRequest !== null) {
+              if (capturedUrl && capturedHeaders && capturedRequest) {
                 return (
-                  capturedUrl === `${baseUrl}/chat/completions` &&
-                  capturedHeaders['Authorization'] === `Bearer ${apiKey}` &&
-                  capturedRequest.model === modelName
+                  capturedUrl === '/api/chat/completions' &&
+                  (capturedRequest as LLMRequest).model === modelName
                 );
               }
               return false;
@@ -179,61 +165,32 @@ describe('LLMService', () => {
       );
     });
 
-    it('should use default base URL when not explicitly configured', async () => {
-      // Generators for configuration values
-      const apiKeyGen = fc.string({ minLength: 10, maxLength: 50 });
-      const modelNameGen = fc.constantFrom('gpt-4', 'gpt-3.5-turbo');
-      const movieTitleGen = fc.string({ minLength: 1 }).filter(s => s.trim().length > 0);
+    it('should never send an API key or Authorization header from the browser', async () => {
+      const service = new LLMService();
+      service.configure('gpt-4');
 
-      await fc.assert(
-        fc.asyncProperty(
-          apiKeyGen,
-          modelNameGen,
-          movieTitleGen,
-          async (apiKey, modelName, movieTitle) => {
-            // Create a new service instance and configure WITHOUT base URL
-            const service = new LLMService();
-            service.configure(apiKey, modelName); // No baseUrl parameter
+      let capturedHeaders: Record<string, string> | null = null;
 
-            // Capture the request URL
-            let capturedUrl: string | null = null;
+      globalThis.fetch = vi.fn(async (_url, options) => {
+        capturedHeaders = options?.headers as Record<string, string>;
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            choices: [
+              { message: { content: JSON.stringify({ synopsis: 's', imdbScore: 8 }) } }
+            ]
+          })
+        } as Response;
+      });
 
-            globalThis.fetch = vi.fn(async (url, _options) => {
-              capturedUrl = url as string;
+      await service.searchMovie('The Matrix');
 
-              // Return a valid mock response
-              return {
-                ok: true,
-                status: 200,
-                json: async () => ({
-                  choices: [{
-                    message: {
-                      content: JSON.stringify({
-                        synopsis: 'Test synopsis',
-                        imdbScore: 7.5
-                      })
-                    }
-                  }]
-                })
-              } as Response;
-            });
-
-            try {
-              // Execute the search
-              await service.searchMovie(movieTitle);
-
-              // Property: Should use default OpenAI base URL
-              expect(capturedUrl).toBe('https://api.openai.com/v1/chat/completions');
-
-              return true;
-            } catch (_error) {
-              // Check if default URL was used before error
-              return capturedUrl === 'https://api.openai.com/v1/chat/completions';
-            }
-          }
-        ),
-        { numRuns: 100 }
-      );
+      expect(capturedHeaders).not.toBeNull();
+      const headers = capturedHeaders as unknown as Record<string, string>;
+      const headerNames = Object.keys(headers).map(k => k.toLowerCase());
+      expect(headerNames).not.toContain('authorization');
+      expect(JSON.stringify(headers)).not.toMatch(/bearer|sk-|api-?key/i);
     });
   });
 

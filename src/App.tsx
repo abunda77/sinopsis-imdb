@@ -134,7 +134,7 @@ function AppContent() {
               {configError}
               <br />
               <br />
-              Please check your environment variables and ensure API_KEY and MODEL_NAME are set correctly.
+              Please check your environment variables and ensure MODEL_NAME is set correctly.
             </AlertDescription>
           </Alert>
         </div>

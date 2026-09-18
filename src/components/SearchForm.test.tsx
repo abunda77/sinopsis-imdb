@@ -9,7 +9,6 @@ import { ConfigProvider } from '../context/ConfigContext';
 vi.mock('../lib/config', () => ({
   tryLoadConfig: vi.fn(() => ({
     config: {
-      apiKey: 'test-api-key',
       modelName: 'test-model',
       apiBaseUrl: 'https://api.test.com/v1'
     },
@@ -123,8 +122,7 @@ describe('SearchForm', () => {
         expect.objectContaining({
           method: 'POST',
           headers: expect.objectContaining({
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer test-api-key'
+            'Content-Type': 'application/json'
           }),
           body: expect.stringContaining(movieTitle)
         })

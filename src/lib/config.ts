@@ -6,7 +6,6 @@ import type { AppConfig } from '../types/models';
 declare global {
   interface Window {
     __APP_CONFIG__?: {
-      apiKey?: string;
       modelName?: string;
     };
   }
@@ -29,10 +28,6 @@ export class ConfigurationError extends Error {
  */
 function validateConfig(config: Partial<AppConfig>): asserts config is AppConfig {
   const missingFields: string[] = [];
-
-  if (!config.apiKey || config.apiKey.trim() === '') {
-    missingFields.push('API_KEY');
-  }
 
   if (!config.modelName || config.modelName.trim() === '') {
     missingFields.push('MODEL_NAME');
@@ -61,7 +56,6 @@ export function loadConfig(): AppConfig {
   const runtimeConfig = window.__APP_CONFIG__;
   
   const config: Partial<AppConfig> = {
-    apiKey: runtimeConfig?.apiKey || import.meta.env.VITE_API_KEY,
     modelName: runtimeConfig?.modelName || import.meta.env.VITE_MODEL_NAME,
     apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'https://api.openai.com/v1',
   };

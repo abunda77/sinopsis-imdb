@@ -54,11 +54,7 @@ export function ConfigProvider({ children }: ConfigProviderProps) {
       setConfigError(null);
       
       // Configure the LLM service with the loaded config
-      llmService.configure(
-        result.config.apiKey,
-        result.config.modelName,
-        result.config.apiBaseUrl
-      );
+      llmService.configure(result.config.modelName);
     }
   };
 

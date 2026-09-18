@@ -23,21 +23,25 @@ app.post('/api/chat/completions', async (req, res) => {
     // Determine target API based on environment or default to Perplexity
     const apiTarget = process.env.LLM_API_TARGET || 'https://api.perplexity.ai/chat/completions';
 
-    // Prefer the server-side key so the proxy keeps working even when the
-    // client-built runtime config is missing or stale. Fall back to the
-    // client-provided Authorization header.
+    // SECURITY: the key is read from the server environment only. We never
+    // forward a client-supplied Authorization header, otherwise a leaked key
+    // from a stale browser bundle would keep working.
     const serverApiKey =
       process.env.OPENROUTER_API_KEY ||
       process.env.LLM_API_KEY ||
       process.env.VITE_API_KEY;
-    const authHeader = serverApiKey
-      ? `Bearer ${serverApiKey}`
-      : req.headers.authorization;
 
-    const headers = { 'Content-Type': 'application/json' };
-    if (authHeader) {
-      headers['Authorization'] = authHeader;
+    if (!serverApiKey) {
+      return res.status(500).json({
+        error: 'Server API key not configured',
+        message: 'Set OPENROUTER_API_KEY in the server environment.'
+      });
     }
+
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${serverApiKey}`
+    };
 
     const response = await fetch(apiTarget, {
       method: 'POST',
@@ -83,7 +87,7 @@ app.listen(PORT, () => {
   if (!hasServerKey) {
     console.warn(
       'Warning: no server-side API key found (OPENROUTER_API_KEY / LLM_API_KEY / VITE_API_KEY). ' +
-      'Falling back to the Authorization header sent by the client.'
+      'Proxy requests will fail until one is set.'
     );
   }
 });
