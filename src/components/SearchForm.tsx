@@ -100,73 +100,82 @@ export function SearchForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full space-y-4">
-      <div className="space-y-3">
-        <div className="flex gap-3">
+    <form onSubmit={handleSubmit} className="w-full">
+      <div className="flex flex-col gap-2">
+        <label htmlFor="movie-title" className="text-sm font-semibold text-ink">
+          Judul film
+        </label>
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           {/* Input field for movie title (Requirements 7.1, 7.2) */}
-          <div className="flex-1 relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg className="h-5 w-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          <div className="relative min-w-0 flex-1">
+            <span
+              className="pointer-events-none absolute inset-y-0 left-0 grid w-11 place-items-center text-faint"
+              aria-hidden="true"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 1 1-12 0 6 6 0 0 1 12 0z" />
               </svg>
-            </div>
+            </span>
             <Input
+              id="movie-title"
               type="text"
-              placeholder="Masukkan judul film..."
+              placeholder="Masukkan judul filmâ€¦"
               value={title}
               onChange={handleInputChange}
               disabled={isLoading || !isConfigured}
-              className="pl-10 h-12 text-base shadow-sm"
-              aria-label="Movie title"
+              className="h-12 pl-11"
               aria-invalid={!!validationError}
-              aria-describedby={validationError ? "title-error" : undefined}
+              aria-describedby={validationError ? 'movie-title-error' : undefined}
             />
           </div>
-          
+
           {/* Submit button (Requirements 7.1, 7.2) */}
           <Button
             type="submit"
+            size="lg"
             disabled={isLoading || !isConfigured}
-            className="min-w-32 h-12 text-base font-semibold shadow-md hover:shadow-lg transition-all"
+            aria-busy={isLoading}
+            className="h-12 shrink-0 sm:min-w-32"
           >
             {isLoading ? (
               <>
-                <svg className="animate-spin -ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
-                Mencari...
+                Mencariâ€¦
               </>
             ) : (
               <>
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 1 1-12 0 6 6 0 0 1 12 0z" />
                 </svg>
                 Cari
               </>
             )}
           </Button>
         </div>
-        
-        {/* Validation error message */}
-        {validationError && (
-          <div className="flex items-center gap-2 text-sm text-destructive bg-red-50 p-3 rounded-lg" role="alert">
-            <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-            </svg>
-            <span id="title-error">{validationError}</span>
-          </div>
-        )}
-        
-        {/* Configuration error message */}
-        {!isConfigured && configError && (
-          <div className="flex items-center gap-2 text-sm text-destructive bg-red-50 p-3 rounded-lg" role="alert">
-            <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-            </svg>
-            <span>{configError}</span>
-          </div>
-        )}
+
+        {/* Reserved helper/error slot â€” never collapses when empty (gate 39) */}
+        <div className="min-h-[1lh]" aria-live="polite">
+          {validationError && (
+            <p id="movie-title-error" className="flex items-center gap-2 text-sm text-danger" role="alert">
+              <svg className="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fillRule="evenodd" clipRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-11.5a.75.75 0 10-1.5 0v4a.75.75 0 001.5 0v-4zm-.75 7.25a1 1 0 100-2 1 1 0 000 2z" />
+              </svg>
+              <span>{validationError}</span>
+            </p>
+          )}
+          {!isConfigured && configError && (
+            <p className="flex items-start gap-2 text-sm text-danger" role="alert">
+              <svg className="mt-1 h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fillRule="evenodd" clipRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-11.5a.75.75 0 10-1.5 0v4a.75.75 0 001.5 0v-4zm-.75 7.25a1 1 0 100-2 1 1 0 000 2z" />
+              </svg>
+              <span>{configError}</span>
+            </p>
+          )}
+        </div>
       </div>
     </form>
   );

@@ -1,0 +1,98 @@
+/* Hallmark Â· design tokens â€” Movie Synopsis Finder
+ * theme: custom (tuned) Â· vibe: "cool engineered calm, soft surfaces, professional restraint"
+ * paper: oklch(97.3% 0.009 262) Â· accent: oklch(49% 0.170 262)
+ * display: Plus Jakarta Sans Â· body: Manrope Â· mono: JetBrains Mono
+ * axes: light / geometric-sans / cool
+ * Every colour below is OKLCH; no pure #000, no pure #fff, every neutral tinted toward hue 262.
+ */
+:root {
+  /* Surfaces */
+  --canvas:      oklch(97.3% 0.009 262);
+  --paper:       oklch(99.4% 0.005 262);
+  --paper-2:     oklch(98.1% 0.006 262);
+  --paper-3:     oklch(95.7% 0.010 262);
+  --paper-4:     oklch(93.2% 0.014 262);
+
+  /* Ink */
+  --ink:         oklch(23% 0.030 262);
+  --ink-2:       oklch(38% 0.026 262);
+  --muted:       oklch(51% 0.022 262);
+  --faint:       oklch(62% 0.018 262);
+
+  /* Rules */
+  --rule:        oklch(89.7% 0.010 262);
+  --rule-2:      oklch(93.8% 0.007 262);
+  --rule-strong: oklch(82% 0.016 262);
+
+  /* Accent â€” the single signal */
+  --accent:        oklch(49% 0.170 262);
+  --accent-hover:  oklch(44% 0.175 262);
+  --accent-ink:    oklch(99% 0.006 262);
+  --accent-soft:   oklch(95.6% 0.030 262);
+  --accent-soft-2: oklch(92.4% 0.046 262);
+  --accent-line:   oklch(86% 0.060 262);
+  --focus:         oklch(56% 0.200 262);
+
+  /* Semantic */
+  --danger:        oklch(50% 0.170 25);
+  --danger-hover:  oklch(45% 0.170 25);
+  --danger-ink:    oklch(99% 0.006 25);
+  --danger-soft:   oklch(96.2% 0.030 25);
+  --danger-line:   oklch(88% 0.070 25);
+  --success:       oklch(47% 0.110 158);
+  --success-ink:   oklch(99% 0.006 158);
+  --success-soft:  oklch(96.2% 0.030 158);
+  --success-line:  oklch(88% 0.060 158);
+  --warn:          oklch(52% 0.110 75);
+  --warn-ink:      oklch(31% 0.055 75);
+  --warn-soft:     oklch(96.4% 0.042 85);
+  --warn-line:     oklch(89% 0.070 85);
+
+  /* Type */
+  --display-font: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --body-font:    "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --mono-font:    "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Space â€” 4pt scale */
+  --space-3xs: 0.125rem;
+  --space-2xs: 0.25rem;
+  --space-xs:  0.5rem;
+  --space-sm:  0.75rem;
+  --space-md:  1rem;
+  --space-lg:  1.5rem;
+  --space-xl:  2.5rem;
+  --space-2xl: 4rem;
+  --space-3xl: 6rem;
+
+  /* Radius */
+  --r-sm: 0.5rem;
+  --r-md: 0.75rem;
+  --r-lg: 1rem;
+  --r-xl: 1.25rem;
+  --r-pill: 999px;
+
+  /* Motion */
+  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in:     cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-micro: 120ms;
+  --dur-short: 220ms;
+  --dur-long:  420ms;
+
+  /* Depth â€” one soft shadow, never stacked */
+  --shadow-soft:  0 14px 30px -18px oklch(23% 0.035 262 / 0.22);
+  --shadow-raise: 0 22px 46px -24px oklch(23% 0.035 262 / 0.30);
+
+  /* Z scale */
+  --z-base:       1;
+  --z-raised:     10;
+  --z-dropdown:   100;
+  --z-sticky:     200;
+  --z-sticky-nav: 300;
+  --z-modal:      400;
+  --z-toast:      500;
+  --z-tooltip:    600;
+
+  /* Chrome */
+  --header-h: 4.25rem;
+}

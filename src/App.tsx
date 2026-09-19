@@ -11,7 +11,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 /**
  * Main application content component
  * Handles the core application logic and layout
- * 
+ *
  * Requirements:
  * - 4.1: Load saved results from database on startup
  * - 6.3: Handle configuration errors
@@ -21,12 +21,12 @@ import { ErrorBoundary } from './components/ErrorBoundary';
  */
 function AppContent() {
   const { currentResult, setCurrentResult, setError } = useApp();
-  const { 
-    savedResults, 
-    initializeDatabase, 
-    saveResult, 
-    deleteResult, 
-    resultExists 
+  const {
+    savedResults,
+    initializeDatabase,
+    saveResult,
+    deleteResult,
+    resultExists
   } = useDatabase();
   const { configError, isConfigured, llmService } = useConfig();
 
@@ -99,8 +99,8 @@ function AppContent() {
    */
   const handleDeleteResult = async (id: string) => {
     await deleteResult(id);
-    
-    // If the deleted result is currently displayed, clear it
+
+    // If the deleted result is displayed, clear it
     if (currentResult?.id === id) {
       setCurrentResult(null);
     }
@@ -110,7 +110,7 @@ function AppContent() {
    * Check if current result is already saved
    */
   const [isCurrentResultSaved, setIsCurrentResultSaved] = useState(false);
-  
+
   useEffect(() => {
     const checkSaved = async () => {
       if (currentResult) {
@@ -126,15 +126,15 @@ function AppContent() {
   // Display configuration error if present (Requirement 6.3)
   if (configError && !isConfigured) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-        <div className="max-w-md w-full">
+      <div className="grid min-h-dvh place-items-center bg-canvas p-4">
+        <div className="w-full max-w-md">
           <Alert variant="destructive">
             <AlertTitle>Configuration Error</AlertTitle>
             <AlertDescription>
               {configError}
               <br />
               <br />
-              Please check your environment variables and ensure MODEL_NAME is set correctly.
+              check your environment variables and ensure MODEL_NAME is set correctly.
             </AlertDescription>
           </Alert>
         </div>
@@ -144,71 +144,59 @@ function AppContent() {
 
   // Main application layout (Requirements 7.3, 7.4)
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+    <div className="min-h-dvh bg-canvas text-ink">
+      {/* Header — edge-aligned minimal (N9): wordmark left, status right */}
+      <header className="app-header">
+        <div className="app-header__inner">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="app-mark" aria-hidden="true">
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 7.5A1.5 1.5 0 0 1 4.5 6h15A1.5 1.5 0 0 1 21 7.5v9A1.5 1.5 0 0 1 19.5 18h-15A1.5 1.5 0 0 1 3 16.5z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 6v12M16 6v12M3 12h18" />
               </svg>
+            </span>
+            <div className="min-w-0">
+              <p className="app-wordmark truncate">Movie Synopsis Finder</p>
+              <p className="mono-label mt-1 text-faint">AI synopsis · IMDb score</p>
             </div>
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                Movie Synopsis Finder
-              </h1>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                Cari informasi film menggunakan AI
-              </p>
-            </div>
+          </div>
+
+          <div className="app-status">
+            <span className="status-dot" data-state={isConfigured ? 'ok' : 'down'} aria-hidden="true" />
+            <span className="mono-label">{isConfigured ? 'Siap' : 'Offline'}</span>
           </div>
         </div>
       </header>
 
-      {/* Main content area with responsive grid layout */}
-      <div className="container mx-auto p-4 lg:p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-4 lg:gap-6 h-[calc(100vh-180px)]">
-          {/* Sidebar - shows on left on desktop, top on mobile */}
-          <aside className="lg:h-full overflow-hidden rounded-xl border bg-white/80 backdrop-blur-sm shadow-lg">
-            <div className="p-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
-              <h2 className="font-semibold text-lg flex items-center gap-2">
-                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Riwayat Pencarian
-              </h2>
-              <p className="text-xs text-muted-foreground mt-1">
-                {savedResults.length} film tersimpan
-              </p>
+      {/* Work area */}
+      <div className="app-body">
+        <div className="app-grid">
+          {/* History rail */}
+          <aside className="rail" aria-label="Riwayat pencarian">
+            <div className="rail__head">
+              <h2 className="rail__title">Riwayat</h2>
+              <p className="mono-label text-faint">{savedResults.length} film tersimpan</p>
             </div>
-            <div className="h-[calc(100%-73px)]">
-              <Sidebar
-                results={savedResults}
-                onSelect={handleSelectResult}
-                onDelete={handleDeleteResult}
-                selectedId={currentResult?.id || null}
-              />
-            </div>
+            <Sidebar
+              results={savedResults}
+              onSelect={handleSelectResult}
+              onDelete={handleDeleteResult}
+              selectedId={currentResult?.id || null}
+            />
           </aside>
 
-          {/* Main content */}
-          <main className="lg:h-full overflow-hidden rounded-xl border bg-white/80 backdrop-blur-sm shadow-lg flex flex-col">
-            {/* Search form */}
-            <div className="p-6 lg:p-8 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
+          {/* Main panel */}
+          <main className="panel">
+            <div className="panel__search">
               <SearchForm />
             </div>
-
-            {/* Result display */}
-            <div className="flex-1 overflow-y-auto">
-              <ResultDisplay
-                result={currentResult}
-                isLoading={false}
-                onSave={handleSave}
-                onRetry={handleRetry}
-                isSaved={isCurrentResultSaved}
-              />
-            </div>
+            <ResultDisplay
+              result={currentResult}
+              isLoading={false}
+              onSave={handleSave}
+              onRetry={handleRetry}
+              isSaved={isCurrentResultSaved}
+            />
           </main>
         </div>
       </div>
@@ -218,7 +206,7 @@ function AppContent() {
 
 /**
  * Main App component with context providers and error boundary
- * 
+ *
  * Requirements:
  * - 8.5: Setup context providers for state management
  * - 1.4, 2.3, 5.3: Error boundary for catching React errors

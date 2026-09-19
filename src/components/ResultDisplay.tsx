@@ -87,7 +87,7 @@ export function ResultDisplay({
 
     try {
       await onRetry();
-    } catch (err) {
+    } catch {
       // Error handling is done in parent component
     } finally {
       setRetryLoading(false);
@@ -97,22 +97,13 @@ export function ResultDisplay({
   // Show loading state
   if (isLoading || retryLoading) {
     return (
-      <div className="flex items-center justify-center p-12">
-        <div className="text-center">
-          <div className="relative inline-flex">
-            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
-              </svg>
-            </div>
-          </div>
-          <p className="mt-6 text-base font-medium text-foreground">
-            {retryLoading ? 'Mencoba lagi...' : 'Mencari informasi film...'}
+      <div className="grid min-h-[18rem] place-items-center p-10">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <span className="spinner" aria-hidden="true" />
+          <p className="text-sm font-semibold text-ink">
+            {retryLoading ? 'Mencoba lagiâ€¦' : 'Mencari informasi filmâ€¦'}
           </p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Mohon tunggu sebentar
-          </p>
+          <p className="text-xs text-faint">Mohon tunggu sebentar</p>
         </div>
       </div>
     );
@@ -121,7 +112,7 @@ export function ResultDisplay({
   // Show error if present
   if (error) {
     return (
-      <div className="p-4">
+      <div className="p-6">
         <Alert variant="destructive">
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
@@ -133,16 +124,17 @@ export function ResultDisplay({
   // Show empty state if no result
   if (!result) {
     return (
-      <div className="flex items-center justify-center p-12">
-        <div className="text-center max-w-md">
-          <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center">
-            <svg className="w-12 h-12 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+      <div className="grid min-h-[18rem] place-items-center p-8">
+        <div className="max-w-sm text-center">
+          <span className="empty-mark" aria-hidden="true">
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 7.5A1.5 1.5 0 0 1 4.5 6h15A1.5 1.5 0 0 1 21 7.5v9A1.5 1.5 0 0 1 19.5 18h-15A1.5 1.5 0 0 1 3 16.5z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 6v12M16 6v12M3 12h18" />
             </svg>
-          </div>
-          <h3 className="text-lg font-semibold mb-2">Belum ada hasil pencarian</h3>
-          <p className="text-muted-foreground">
-            Masukkan judul film di atas untuk mencari informasi dan sinopsis
+          </span>
+          <h3 className="mt-4 text-base font-bold text-ink">Belum ada hasil pencarian</h3>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            Masukkan judul film di atas untuk mencari informasi dan sinopsisnya.
           </p>
         </div>
       </div>
@@ -151,18 +143,18 @@ export function ResultDisplay({
 
   // Display movie result
   return (
-    <div className="p-6 lg:p-8 space-y-6">
+    <div className="reveal space-y-6 p-6 lg:p-8">
       {/* Success message */}
       {saveSuccess && (
-        <Alert className="bg-green-50 border-green-200">
+        <Alert className="border-success-line bg-success-soft text-success">
           <div className="flex items-center gap-2">
-            <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            <svg className="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fillRule="evenodd" clipRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.7-9.3a1 1 0 00-1.4-1.4L9 10.6 7.7 9.3a1 1 0 10-1.4 1.4l2 2a1 1 0 001.4 0l4-4z" />
             </svg>
-            <AlertTitle className="text-green-800 mb-0">Berhasil!</AlertTitle>
+            <AlertTitle className="mb-0">Berhasil disimpan</AlertTitle>
           </div>
-          <AlertDescription className="text-green-700 mt-2">
-            Film berhasil disimpan ke riwayat pencarian
+          <AlertDescription className="mt-1">
+            Film ini tersimpan di riwayat pencarian.
           </AlertDescription>
         </Alert>
       )}
@@ -171,80 +163,68 @@ export function ResultDisplay({
       {saveError && (
         <Alert variant="destructive">
           <div className="flex items-center gap-2">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            <svg className="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fillRule="evenodd" clipRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-11.5a.75.75 0 10-1.5 0v4a.75.75 0 001.5 0v-4zm-.75 7.25a1 1 0 100-2 1 1 0 000 2z" />
             </svg>
-            <AlertTitle className="mb-0">Gagal Menyimpan</AlertTitle>
+            <AlertTitle className="mb-0">Gagal menyimpan</AlertTitle>
           </div>
-          <AlertDescription className="mt-2">{saveError}</AlertDescription>
+          <AlertDescription className="mt-1">{saveError}</AlertDescription>
         </Alert>
       )}
 
-      {/* Movie information */}
-      <div className="space-y-6">
-        {/* Title */}
-        <div className="border-b pb-4">
-          <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+      <article className="space-y-5">
+        <header className="space-y-3">
+          <h2 className="display-wrap text-2xl font-bold tracking-tight text-ink lg:text-3xl">
             {result.title}
           </h2>
-        </div>
 
-        {/* IMDb Score */}
-        <div className="bg-gradient-to-br from-yellow-50 to-amber-50 rounded-xl p-6 border border-yellow-200">
-          <div className="flex items-center gap-3 mb-2">
-            <svg className="w-6 h-6 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-            </svg>
-            <h3 className="text-sm font-semibold text-yellow-900 uppercase tracking-wide">
-              Skor IMDb
-            </h3>
+          <div className="score-strip">
+            <span className="mono-label text-warn-ink">Skor IMDb</span>
+            <p className="flex items-baseline gap-2">
+              <span className="font-mono text-3xl font-semibold tabular-nums text-ink">
+                {result.imdbScore.toFixed(1)}
+              </span>
+              <span className="text-sm text-muted-foreground">/ 10</span>
+            </p>
           </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-5xl font-bold text-yellow-900">{result.imdbScore.toFixed(1)}</span>
-            <span className="text-2xl text-yellow-700 font-medium">/ 10</span>
-          </div>
-        </div>
+        </header>
 
-        {/* Synopsis */}
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
-          <div className="flex items-center gap-3 mb-4">
-            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <h3 className="text-sm font-semibold text-blue-900 uppercase tracking-wide">
-              Sinopsis
-            </h3>
-          </div>
-          <p className="text-base leading-relaxed text-gray-700">{result.synopsis}</p>
-        </div>
-      </div>
+        <section className="space-y-2">
+          <h3 className="mono-label">Sinopsis</h3>
+          <p className="max-w-[68ch] text-[0.9375rem] leading-relaxed text-ink-2">
+            {result.synopsis}
+          </p>
+        </section>
+      </article>
 
       {/* Action buttons */}
-      <div className="flex gap-3 pt-4 border-t">
+      <div className="flex flex-col gap-3 border-t border-rule pt-5 sm:flex-row">
         <Button
           onClick={handleSave}
           disabled={isSaved || saveLoading}
-          className="flex-1 h-12 text-base font-semibold shadow-md hover:shadow-lg transition-all"
+          aria-busy={saveLoading}
+          className="h-12 w-full sm:flex-1"
         >
           {saveLoading ? (
             <>
-              <svg className="animate-spin -ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
-              Menyimpan...
+              Menyimpanâ€¦
             </>
           ) : isSaved ? (
             <>
-              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fillRule="evenodd" clipRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.7-9.3a1 1 0 00-1.4-1.4L9 10.6 7.7 9.3a1 1 0 10-1.4 1.4l2 2a1 1 0 001.4 0l4-4z" />
               </svg>
-              Sudah Tersimpan
+              Sudah tersimpan
             </>
           ) : (
             <>
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 4h11l3 3v13H5z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 4v5h6M8 20v-6h8v6" />
               </svg>
               Simpan
             </>
@@ -255,22 +235,23 @@ export function ResultDisplay({
           onClick={handleRetry}
           variant="outline"
           disabled={retryLoading}
-          className="flex-1 h-12 text-base font-semibold shadow-sm hover:shadow-md transition-all"
+          aria-busy={retryLoading}
+          className="h-12 w-full sm:flex-1"
         >
           {retryLoading ? (
             <>
-              <svg className="animate-spin -ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
-              Mencoba Lagi...
+              Mencoba lagiâ€¦
             </>
           ) : (
             <>
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M20 11a8 8 0 10-2.3 5.7M20 5v6h-6" />
               </svg>
-              Coba Lagi
+              Coba lagi
             </>
           )}
         </Button>
